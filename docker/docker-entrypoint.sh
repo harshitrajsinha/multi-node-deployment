@@ -5,7 +5,7 @@ echo "Starting Social Media App container..."
 
 # Initialize the database before starting FastAPI
 echo "Running database initialization..."
-/app/init_db.sh
+./init_db.sh
 
 echo "Database initialization successful."
 echo "Starting FastAPI with OpenTelemetry instrumentation..."
