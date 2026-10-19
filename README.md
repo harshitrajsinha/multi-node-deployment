@@ -39,6 +39,33 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 The API will be available at `http://localhost:8000`
 
+## Run with Docker
+
+Build the image from the repository root:
+
+```bash
+docker build -f docker/Dockerfile -t social-media-app .
+```
+
+Run the container, passing your database settings from `.env.local`:
+
+```bash
+docker run --name social-media-app \
+  -p 8000:8000 \
+  --env-file .env.local \
+  --add-host=host.docker.internal:host-gateway \
+  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317 \
+  social-media-app
+```
+
+The container starts the app with `opentelemetry-instrument python3 main.py`.
+The image defaults the OTLP endpoint to `localhost:4317`; the command above
+overrides it so the container can reach a SigNoz collector running on the host.
+If SigNoz or PostgreSQL is running in Docker, connect the app to the same
+Docker network and use the relevant service/container name instead of
+`host.docker.internal`. Ensure `DATABASE_URL` in `.env.local` points to a
+PostgreSQL host reachable from the container (not `localhost`).
+
 ## API Endpoints
 
 ### Authentication
@@ -285,3 +312,12 @@ k6 cloud login
 ```k6 cloud run --local-execution script.js```
 
 4. Access on Grafana cloud
+
+
+
+
+
+
+```
+nohup python3 main.py &> app.log &
+```
