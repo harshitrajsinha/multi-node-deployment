@@ -52,8 +52,7 @@ Run the container, passing your database settings from `.env.local`:
 ```bash
 docker run --name social-media-app \
   -p 8000:8000 \
-  --env-file .env.local \
-  --add-host=host.docker.internal:host-gateway \
+  --env-file .env \
   -e OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317 \
   social-media-app
 ```

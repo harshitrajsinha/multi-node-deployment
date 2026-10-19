@@ -1,5 +1,7 @@
 FROM python:alpine3.24
 
+RUN apk add --no-cache postgresql-client
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     OTEL_SERVICE_NAME=social-media-app \
@@ -17,6 +19,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
 
 COPY --chown=app:app main.py auth.py database.py models.py ./
+COPY --chown=app:app init_db.sh schema.sql seed.sql ./
 COPY --chown=app:app routers/ ./routers/
 
 EXPOSE 8000
