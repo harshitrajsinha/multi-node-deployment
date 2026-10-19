@@ -23,12 +23,12 @@ COPY --chown=app:app init_db.sh schema.sql seed.sql ./
 COPY --chown=app:app routers/ ./routers/
 
 # Add the startup script
-COPY --chown=app:app docker/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=app:app docker/docker-entrypoint.sh ./
 
-RUN chmod +x /app/docker-entrypoint.sh /app/init_db.sh
+RUN chmod +x ./docker-entrypoint.sh ./init_db.sh
 
 EXPOSE 8000
 
 USER app
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

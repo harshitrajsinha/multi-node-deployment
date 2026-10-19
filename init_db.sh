@@ -1,21 +1,22 @@
-#!/bin/bash
 
-# Database initialization script for Social Media App
-# This script creates the database, runs the schema, and loads seed data
+#!/bin/sh
+set -eu
 
 # Database configuration
-DB_NAME=$1
-DB_USER=$2
-DB_HOST=$3
-DB_PORT="5432"
+DB_NAME="${DB_NAME:-social_media_db}"
+DB_USER="${DB_USER:-postgres}"
+DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5432}"
 
-# Colors for output
+export PGPASSWORD="${DB_PASSWORD:?DB_PASSWORD must be set}"
+
+# Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${YELLOW}Social Media App Database Initialization${NC}"
+echo "${YELLOW}Social Media App Database Initialization${NC}"
 echo "========================================"
 echo ""
 
@@ -47,53 +48,60 @@ else
 fi
 echo ""
 
-# Run schema
-echo -e "${YELLOW}Applying database schema...${NC}"
-psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f schema.sql
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Schema applied successfully${NC}"
+# Check whether the application tables exist
+echo "Checking application tables..."
+
+TABLES_EXIST=$(psql -X -h "$DB_HOST" -p "$DB_PORT" \
+    -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT CASE
+        WHEN to_regclass('public.users') IS NOT NULL
+         AND to_regclass('public.posts') IS NOT NULL
+        THEN 1 ELSE 0
+     END")
+
+if [ "$TABLES_EXIST" != "1" ]; then
+    echo "Application tables are missing. Applying schema..."
+
+    psql -X -v ON_ERROR_STOP=1 \
+        -h "$DB_HOST" -p "$DB_PORT" \
+        -U "$DB_USER" -d "$DB_NAME" \
+        -f /app/schema.sql
+
+    echo "${GREEN}Schema applied successfully${NC}"
 else
-    echo -e "${RED}Error: Failed to apply schema${NC}"
-    exit 1
+    echo "${GREEN}Application tables already exist. Skipping schema.${NC}"
 fi
-echo ""
 
-# Run seed data
-echo -e "${YELLOW}Loading seed data...${NC}"
-psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f seed.sql
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Seed data loaded successfully${NC}"
+# Check whether both tables are empty
+echo "Checking whether seed data is needed..."
+
+TABLE_COUNTS=$(psql -X -h "$DB_HOST" -p "$DB_PORT" \
+    -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT
+        (SELECT COUNT(*) FROM public.users) || ',' ||
+        (SELECT COUNT(*) FROM public.posts)")
+
+USER_COUNT=${TABLE_COUNTS%%,*}
+POST_COUNT=${TABLE_COUNTS#*,}
+
+if [ "$USER_COUNT" = "0" ] && [ "$POST_COUNT" = "0" ]; then
+    echo "Both tables are empty. Loading seed data..."
+
+    psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f seed.sql
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Seed data loaded successfully${NC}"
+    else
+        echo -e "${RED}Error: Failed to load seed data${NC}"
+        exit 1
+    fi
+    echo ""
 else
-    echo -e "${RED}Error: Failed to load seed data${NC}"
-    exit 1
+    echo "${YELLOW}Data already exists in at least one table. Skipping seed data.${NC}"
 fi
+
 echo ""
-
-# Verify data
-echo -e "${YELLOW}Verifying data...${NC}"
-USER_COUNT=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM users;")
-POST_COUNT=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM posts;")
-
-echo "Users: $USER_COUNT"
-echo "Posts: $POST_COUNT"
-
-if [ "$USER_COUNT" -eq "10" ] && [ "$POST_COUNT" -eq "500" ]; then
-    echo -e "${GREEN}✓ Data verification successful${NC}"
-else
-    echo -e "${RED}✗ Data verification failed${NC}"
-    echo "Expected: 10 users, 500 posts"
-    echo "Found: $USER_COUNT users, $POST_COUNT posts"
-    exit 1
-fi
-echo ""
-
-echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Database initialization complete!${NC}"
-echo ""
+echo "${GREEN}Database initialization complete!${NC}"
 echo "Database: $DB_NAME"
 echo "Host: $DB_HOST"
 echo "Port: $DB_PORT"
 echo "User: $DB_USER"
-echo ""
-echo "To connect to the database:"
-echo "  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME"
