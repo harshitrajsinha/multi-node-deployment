@@ -22,8 +22,13 @@ COPY --chown=app:app main.py auth.py database.py models.py ./
 COPY --chown=app:app init_db.sh schema.sql seed.sql ./
 COPY --chown=app:app routers/ ./routers/
 
+# Add the startup script
+COPY --chown=app:app docker/docker-entrypoint.sh /app/docker-entrypoint.sh
+
+RUN chmod +x /app/docker-entrypoint.sh /app/init_db.sh
+
 EXPOSE 8000
 
 USER app
 
-CMD ["opentelemetry-instrument", "python3", "main.py"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
