@@ -49,3 +49,10 @@ Thumbs.db
 # signoz
 pours/
 casting.yaml.lock
+
+.kiro/
+.agents/
+.devin/
+skills-lock.json
+
+terraform/
