@@ -46,11 +46,12 @@ fi
 
 if [ ! -d "multi-node-deployment" ]; then
     git clone https://github.com/harshitrajsinha/multi-node-deployment.git
-    cd multi-node-deployment
+fi
 
-    # Create .env file
-    cat <<'EOF' > .env
-    
+cd multi-node-deployment
+
+# Create .env file
+cat <<'EOF' > .env
 SECRET_KEY=your-secret-key-change-this-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -67,4 +68,6 @@ DB_HOST=localhost
 DB_PORT=5432
 EOF
 
-fi
+
+docker build -f docker/Dockerfile -t social-media-app .
+docker run --name social-media-app -p 8000:8000 --env-file .env -e OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317 social-media-app
