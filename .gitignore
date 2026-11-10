@@ -56,3 +56,5 @@ casting.yaml.lock
 skills-lock.json
 
 terraform/
+
+user-data-scripts.sh
