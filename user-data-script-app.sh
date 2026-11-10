@@ -7,15 +7,11 @@ exec &> >(tee -a /tmp/logfile.log)
 export DEBIAN_FRONTEND=noninteractive
 export HOME=/root
 
+# As root user in root account
+
 # Update and upgrade packages
 sudo apt-get update
 sudo apt-get upgrade -y
-
-if [ ! -d "multi-node-deployment" ]; then
-    cd /home/ubuntu
-    git clone https://github.com/harshitrajsinha/multi-node-deployment.git
-    echo "exit code: $?"
-fi
 
 if ! pg_isready --version &>/dev/null; then
     sudo apt install -y postgresql-client
@@ -47,3 +43,28 @@ EOF
 
 fi
 
+
+if [ ! -d "multi-node-deployment" ]; then
+    git clone https://github.com/harshitrajsinha/multi-node-deployment.git
+    cd multi-node-deployment
+
+    # Create .env file
+    cat <<'EOF' > .env
+    
+SECRET_KEY=your-secret-key-change-this-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Application Configuration
+APP_NAME=Social Media API
+APP_VERSION=1.0.0
+
+
+DB_NAME=social_media_db
+DB_USER=postgres
+DB_PASSWORD=your_database_password
+DB_HOST=localhost
+DB_PORT=5432
+EOF
+
+fi
