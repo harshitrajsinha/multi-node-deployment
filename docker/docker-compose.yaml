@@ -10,8 +10,8 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - /opt/init:/docker-entrypoint-initdb.d
-      - social_app_data:/var/lib/postgresql
+      - ${HOME}/projects/aws/social-media-app/db/db-init:/docker-entrypoint-initdb.d
+      - social_db_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]  # ensure no errors due to trailing slashes
       interval: 30s # Checks every 30 seconds
@@ -22,25 +22,25 @@ services:
       resources:
         limits:
           cpus: '1.5'      # Maximum 75% of total CPU core
-          memory: 10G      # Maximum 80% of RAM
+          memory: 3G      # Maximum 80% of RAM
         reservations:
           cpus: '1'      # Guaranteed minimum 50% of total CPU core
-          memory: 6G      # Guaranteed minimum 50% of RAM
+          memory: 2G      # Guaranteed minimum 50% of RAM
     secrets:
       - postgres_password
       - postgres_user
       - postgres_db
 
 volumes:
-  social_app_data:
+  social_db_data:
 
 secrets:
   postgres_password:
-    file: ${HOME}/secrets/postgres_password   # Password file located on host machine
+    file: ${HOME}/projects/aws/social-media-app/db/postgres_password   # Password file located on host machine
   postgres_user:
-    file: ${HOME}/secrets/postgres_user  
+    file: ${HOME}/projects/aws/social-media-app/db/postgres_user  
   postgres_db:
-    file: ${HOME}/secrets/postgres_name
+    file: ${HOME}/projects/aws/social-media-app/db/postgres_name
 
 
 
