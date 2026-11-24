@@ -58,3 +58,7 @@ skills-lock.json
 terraform/
 
 user-data-scripts.sh
+
+db/postgres_password
+db/postgres_user
+db/postgres_name
